@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+
+{% block body %}
+<h2>Add a book</h2>
+<form action="/action" method="get">
+    <input type="hidden" name="action" value="11">
+    <input type="text", name="title", placeholder="Title">
+    <input type="text", name="author", placeholder="Author">
+    <input type="radio", name="ebook" value="available"> Yes
+    <input type="radio", name="ebook" value="None"> No
+    <input type="text", name="ebook_link", placeholder="Ebook Link if Yes">
+    <button type="submit">Create</button>
+</form>
+
+{% endblock %}

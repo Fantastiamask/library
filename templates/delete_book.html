@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+
+
+{% block body %}
+<h2>Delete a book</h2>
+<form action="/action" method="get">
+    <input type="hidden" name="action" value="12">
+    <input type="text", name="title", placeholder="Title">
+    <input type="text", name="author", placeholder="Author">
+    <button type="submit">Delete</button>
+</form>
+
+{% endblock %}

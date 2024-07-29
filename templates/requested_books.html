@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<h2>Books requested</h2>
+{{message}}
+{% for book in books %}
+    {{ book[0] }} by {{ book[1] }}
+    <form action="/action">
+        <input type="hidden" name="action" value="18">
+        <input type="hidden" name="book_title" value="{{book[0]}}">
+        <input type="hidden" name="book_author" value="{{book[1]}}">
+        <button type="submit">Delete Request</button>
+    </form>
+{% endfor %}
+{% endblock %}

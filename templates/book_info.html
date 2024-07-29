@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block body %}
+    
+    <h2>{{title}}</h2>    
+    <p>A book by {{author}}</p>
+    <p>Status: {{status}}</p>
+    {% if status == 'available'%}
+        <form action="/action">
+            <input type="hidden" name="action" value="3">
+            <input type="hidden" name="book_id" value="{{book_id}}">
+            <button type="submit">Checkout Book</button>
+        </form>
+
+    {% elif status == 'Checked out' %}
+
+        {% if borrower == username %}
+            {% if ebook == 'available' %}
+                <a href="{{ebook_link}}">Download Book</a>
+            {% endif %}
+            <form action="/action">
+                <input type="hidden" name="action" value="4">
+                <input type="hidden" name="book_title" value="{{title}}">
+                <input type="hidden" name="book_author" value="{{author}}">
+                <button type="submit">Return Book</button>
+            </form>
+        {% endif %}
+    {% endif %}
+{% endblock %}

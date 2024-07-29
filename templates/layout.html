@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta name="viewport" content="initial-scale=1, width=device-width">
+        <title>hello</title>
+        <style>
+            body{
+                background-color: beige;
+            }
+            .content {
+                max-width: 960px;
+                margin: auto;
+            }
+    
+            * {
+                box-sizing: border-box;
+            }
+    
+            .top {
+                margin: auto;
+                max-width: 300px;
+                /* Optionally set height if needed */
+
+            }
+        </style>
+    </head>
+    <body>
+        <div class="top">
+            <h1 id="header"><a href="/" style="text-decoration: none; color: black; margin: 0%;">Dhanvin's Library</a></h1>
+            <div id="search", style="padding-bottom: 2%;">
+                <form action="/search">
+                    <input style="padding: 2%;" autocomplete="off" type="text", name="search", placeholder="Search for books">
+                </form>
+            </div>
+        </div>
+            
+
+        <div class="content">
+            
+            {% block body %}{% endblock %}
+        </div>    
+        
+    </body>
+</html>

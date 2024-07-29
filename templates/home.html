@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block body %}
+
+
+
+
+
+        <b>You are logged in as '{{name}}'</b> 
+        {% if message != None %}
+
+            <p><i>{{message}}</i></p>
+        {% endif %}    
+        {% if name == "dhanvin" %}
+            <p></p>
+            <form action="/action" method="get">
+                <input type="hidden" name="action" value="1">
+                <button type="submit" style="padding: 1%; margin: 1%;">Add Book</button>
+            </form>
+            <form action="/action">
+                <input type="hidden" name="action" value="2">
+                <button type="submit" style="padding: 1%; margin: 1%;">Delete Book</button>
+            </form>
+            <form action="/action">
+                <input type="hidden" name="action" value="17">
+                <button type="submit" style="padding: 1%; margin: 1%;">View Requested Books</button>
+            </form>
+        {% endif %}
+        <form action="/action">
+                <input type="hidden" name="action" value="13">
+                <button type="submit" style="padding: 1%; margin: 1%;">View Checkout Books</button>
+        </form>
+        <form action="/action">
+            <input type="hidden" name="action" value="14">
+            <button type="submit" style="padding: 1%; margin: 1%;">Browse All Books</button>
+        </form>
+        <form action="/action">
+            <input type="hidden" name="action" value="15">
+            <button type="submit" style="padding: 1%; margin: 1%;">Request Book</button>
+        </form>
+        <form action="/action">
+                <input type="hidden" name="action" value="0">
+                <button type="submit" style="padding: 1%; margin: 1%;">Logout</button>
+        </form>
+
+
+{% endblock %}
