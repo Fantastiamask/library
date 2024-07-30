@@ -4,6 +4,9 @@
     
     <h2>{{title}}</h2>    
     <p>A book by {{author}}</p>
+    {% if series != None %}
+        {{series}} {{series_num}}
+    {% endif %}
     <p>Status: {{status}}</p>
     {% if status == 'available'%}
         <form action="/action">

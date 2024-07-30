@@ -3,13 +3,14 @@
 {% block body %}
     <h2>You searched for: {{search_term}}</h2>
     {% for book in books %}
+        <p> </p>
         {{ book[0] }} by {{ book[1] }}
         <form action="/action">
             <input type="hidden" name="action" value="10">
             <input type="hidden" name="book_title" value="{{book[0]}}">
             <input type="hidden" name="book_author" value="{{book[1]}}">
             <button type="submit">More Info</button>
-            <p></p>
+            
         </form>
     {% endfor %}
 

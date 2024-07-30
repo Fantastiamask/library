@@ -5,43 +5,46 @@
 
 
 
-
-        <b>You are logged in as '{{name}}'</b> 
-        {% if message != None %}
-
-            <p><i>{{message}}</i></p>
-        {% endif %}    
-        {% if name == "dhanvin" %}
-            <p></p>
-            <form action="/action" method="get">
-                <input type="hidden" name="action" value="1">
-                <button type="submit" style="padding: 1%; margin: 1%;">Add Book</button>
+        
+        
+        <div>
+            <h1 style="margin-left: 30%;">Hello {{name}}!</h1>
+            {% if message != None %}
+                <p style="margin-left: 30%;"><i>{{message}}</i></p>
+            {% endif %}
+            {% if name == "dhanvin" %}
+                <p></p>
+                <form action="/action" method="get">
+                    <input type="hidden" name="action" value="1">
+                    <button type="submit" style="padding: 1%; margin: 1%; margin-left: 30%;">Add Book</button>
+                </form>
+                <form action="/action">
+                    <input type="hidden" name="action" value="2">
+                    <button type="submit" style="padding: 1%; margin: 1%;margin-left: 30%;">Delete Book</button>
+                </form>
+                <form action="/action">
+                    <input type="hidden" name="action" value="17">
+                    <button type="submit" style="padding: 1%; margin: 1%;margin-left: 30%;">View Requested Books</button>
+                </form>
+            {% endif %}
+            <form action="/action">
+                    <input type="hidden" name="action" value="13">
+                    <button type="submit" style="padding: 1%; margin: 1%;margin-left: 30%; text-align: center;">View Checkout Books</button>
             </form>
             <form action="/action">
-                <input type="hidden" name="action" value="2">
-                <button type="submit" style="padding: 1%; margin: 1%;">Delete Book</button>
+                <input type="hidden" name="action" value="14">
+                <button type="submit" style="padding: 1%; margin: 1%;margin-left: 30%;">Browse All Books</button>
             </form>
             <form action="/action">
-                <input type="hidden" name="action" value="17">
-                <button type="submit" style="padding: 1%; margin: 1%;">View Requested Books</button>
+                <input type="hidden" name="action" value="15">
+                <button type="submit" style="padding: 1%; margin: 1%;margin-left: 30%;">Request Book</button>
             </form>
-        {% endif %}
-        <form action="/action">
-                <input type="hidden" name="action" value="13">
-                <button type="submit" style="padding: 1%; margin: 1%;">View Checkout Books</button>
-        </form>
-        <form action="/action">
-            <input type="hidden" name="action" value="14">
-            <button type="submit" style="padding: 1%; margin: 1%;">Browse All Books</button>
-        </form>
-        <form action="/action">
-            <input type="hidden" name="action" value="15">
-            <button type="submit" style="padding: 1%; margin: 1%;">Request Book</button>
-        </form>
-        <form action="/action">
-                <input type="hidden" name="action" value="0">
-                <button type="submit" style="padding: 1%; margin: 1%;">Logout</button>
-        </form>
+            <form action="/action">
+                    <input type="hidden" name="action" value="0">
+                    <button type="submit" style="padding: 1%; margin: 1%;margin-left: 30%; ">Logout</button>
+            </form>
+        </div>
+        
 
 
 {% endblock %}

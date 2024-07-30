@@ -1,18 +1,13 @@
-<!DOCTYPE html>
+{% extends "layout.html" %}
 
-<html lang="en">
-    <head>
-        <meta name="viewport" content="initial-scale=1, width=device-width">
-        <title>hello</title>
-    </head>
-    <body>
-        <h1>Welcome to Dhanvin's Library!</h1>
-        Login or signup to get started
-        <p>{{error}}</p>
-        <form action="/login" method="POST">
-            <input autocomplete="off" autofocus name="name" placeholder="Username" type="text">
-            <input autocomplete="off" autofocus name="pin" placeholder="Pin" type="password">
-            <button type="submit">Login</button>
-        </form>
-    </body>
-</html>
+{% block body %}
+    <h1>Welcome to Dhanvin's Library!</h1>
+    <p> </p>
+    Login or signup to get started
+    <p>{{error}}</p>
+    <form action="/login" method="POST">
+        <input autocomplete="off" autofocus name="name" placeholder="Username" type="text">
+        <input autocomplete="off" autofocus name="pin" placeholder="Pin" type="password">
+        <button type="submit">Login</button>
+    </form>
+{% endblock %}

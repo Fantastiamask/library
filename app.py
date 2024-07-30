@@ -30,21 +30,23 @@ def find_book(title, author):
     result = res[0]
     if result == 0:
         return "No Book"
-    cur.execute("SELECT rowid, STATUS, BORROWER, EBOOK, EBOOK_LINK FROM books WHERE TITLE=? AND AUTHOR=?", (title, author))
+    cur.execute("SELECT rowid, STATUS, BORROWER, EBOOK, EBOOK_LINK, SERIES, NUM_IN_SERIES FROM books WHERE TITLE=? AND AUTHOR=?", (title, author))
     res = cur.fetchone()
     rowid = res[0]
     status = res[1]
     borrower = res[2]
     ebook = res[3]
     ebook_link = res[4]
-    return [rowid, status, borrower, ebook, ebook_link]
-def add_book(title, author, ebook, ebook_link, status): 
+    series = res[5]
+    series_num = res[6]
+    return [rowid, status, borrower, ebook, ebook_link, series, series_num]
+def add_book(title, author, ebook, ebook_link, status, series, series_num): 
     cur.execute("SELECT COUNT(*) FROM books WHERE TITLE = ? AND AUTHOR = ?", (title, author))
     res = cur.fetchone()
     if res[0] == 1:
         return False
 
-    cur.execute("INSERT INTO books (TITLE, AUTHOR, EBOOK, EBOOK_LINK, STATUS) VALUES (?, ?, ?, ?, ?)", (title, author, ebook, ebook_link, status))
+    cur.execute("INSERT INTO books (TITLE, AUTHOR, EBOOK, EBOOK_LINK, STATUS, SERIES, NUM_IN_SERIES) VALUES (?, ?, ?, ?, ?, ?, ?)", (title, author, ebook, ebook_link, status, series, series_num))
     con.commit()
     return True
 def delete_book(title, author):
@@ -80,16 +82,6 @@ def checkout_book(book_id):
     cur.execute("INSERT INTO checked_out(UserID, BookID) VALUES (?, ?)", (rowid, book_id))
     con.commit()
     return True
-
-    # if books[book_id]["status"] != "available":
-    #         print(f"The book with ID '{book_id}' is already checked out")
-    #         return
-    # if books[book_id]["ebook"] == "available":
-    #         input(f"The book with ID '{book_id}' is available as a ebook. Press enter to continue.")
-    #         link = books[str(book_id)]["ebook_link"]
-    #         webbrowser.open(link)
-    # else:
-    #         input(f"The book with ID '{book_id}' is available. Press enter to continue.")
 def return_book(title, author):
     username = session.get("username", False)
     cur.execute("SELECT COUNT(*) FROM books WHERE TITLE = ? AND AUTHOR = ?", (title, author))
@@ -111,16 +103,6 @@ def return_book(title, author):
     cur.execute("DELETE FROM checked_out WHERE UserId = ?", (rowid, ))
     con.commit()
     return True
-
-    # if books[book_id]["status"] != "available":
-    #         print(f"The book with ID '{book_id}' is already checked out")
-    #         return
-    # if books[book_id]["ebook"] == "available":
-    #         input(f"The book with ID '{book_id}' is available as a ebook. Press enter to continue.")
-    #         link = books[str(book_id)]["ebook_link"]
-    #         webbrowser.open(link)
-    # else:
-    #         input(f"The book with ID '{book_id}' is available. Press enter to continue.")
 def request_book(title, author):
     cur.execute("SELECT COUNT(*) FROM requested_books WHERE TITLE = ? AND AUTHOR = ?", (title, author))
     res = cur.fetchone()
@@ -134,6 +116,18 @@ def find_request_books():
     cur.execute("SELECT * FROM requested_books")
     res = cur.fetchall()
     return res
+def delete_request(title, author):
+    cur.execute("SELECT COUNT(*) FROM requested_books WHERE TITLE = ? AND AUTHOR = ?", (title, author))
+    res = cur.fetchone()
+    return res
+    if res[0] != 1:
+        return False
+    cur.execute("SELECT rowid FROM requested_books WHERE TITLE = ? AND AUTHOR = ?", (title, author))
+    res = cur.fetchone()
+    resfi = res[0]
+    cur.execute(f"DELETE FROM requested_books WHERE rowid = {resfi}")
+    con.commit()
+    return True
 @app.route("/")
 def index():
     error = request.args.get("error")
@@ -192,7 +186,14 @@ def action():
         book_id = request.args.get("book_id", "0")
 
     if action == "1":
-        return render_template("add_book.html")
+        cur.execute("SELECT SERIES FROM books")
+        res = cur.fetchall()
+        book_series = []
+        for series in res:
+            if series[0] not in book_series:
+                if series[0] != None:
+                    book_series.append(series[0])
+        return render_template("add_book.html", book_series=book_series)
     if action == "2":
         return render_template("delete_book.html")
     if action == "11":
@@ -201,7 +202,9 @@ def action():
             ebook = request.args.get("ebook", "0")
             ebook_link = request.args.get("ebook_link", "None")
             status = "available"
-            hehe = add_book(title, author, ebook, ebook_link, status)
+            series = request.args.get("series", "None")
+            series_num = request.args.get("series_num", "None")
+            hehe = add_book(title, author, ebook, ebook_link, status, series, series_num)
             if hehe == True:
                 return redirect("/?message=Book+Created")
             else:
@@ -210,21 +213,21 @@ def action():
         title = request.args.get("title", "0")
         author = request.args.get("author", "0")
         hehe = delete_book(title, author)
-        if hehe == True:
+        if hehe:
             return redirect("/?message=Book+Deleted")
         else:
             return redirect("/?message=Book+does+not+exist")
     if action == "3":
         book_id = request.args.get("book_id")
         res = checkout_book(book_id)
-        if res == False:
+        if not res:
             return redirect("/?message=Unable+to+checkout+book!")
         return redirect("/?message=Sucessfully+checked+out+book!")
     if action == "4":
         title = request.args.get("book_title", "0")
         author = request.args.get("book_author", "0")
         res = return_book(title, author)
-        if res == True:
+        if res:
             return redirect("/?message=Book+returned+sucessfully!")
         return redirect("/?message=Unable+to+return+book!")
 
@@ -238,10 +241,12 @@ def action():
         borrower = results[2]
         ebook = results[3]
         ebook_link = results[4]
-        return render_template("book_info.html", book_id=book_id, title=title, author=author, status=status, borrower=borrower, ebook=ebook, ebook_link=ebook_link, username=username)
+        series = results[5]
+        series_num = results[6]
+        return render_template("book_info.html", book_id=book_id, title=title, author=author, status=status, borrower=borrower, ebook=ebook, ebook_link=ebook_link, username=username, series=series, series_num=series_num)
     if action == "13":
         username = session.get("username", False)
-        if username == False:
+        if not username:
             return render_template("error.html")
         cur.execute("SELECT COUNT(*) FROM books WHERE BORROWER = ?", (username, ))
         res = cur.fetchone()
@@ -253,14 +258,14 @@ def action():
         books = cur.fetchall()
         return render_template("checked_out_books.html", username=username, books=books, message=message)
     if action == "14":
-        return redirect("/search?search=")
+        return redirect("/search?search=+")
     if action == "15":
         return render_template("request.html")
     if action == "16":
-        title = request.args.get("title", "0")
-        author = request.args.get("author", "0")
+        title = request.args.get("title")
+        author = request.args.get("author")
         hehe = request_book(title, author)
-        if hehe == True:
+        if hehe:
                 return redirect("/?message=Book+Requested")
         else:
                 return redirect("/?message=Book+already+exists")
@@ -268,12 +273,31 @@ def action():
     if action == "17":
         books = find_request_books()
         return render_template("requested_books.html", books=books)
+    if action == "18":
+        title = request.args.get("title", "0")
+        author = request.args.get("author", "0")
+        cur.execute("SELECT COUNT(*) FROM requested_books WHERE TITLE = ? AND AUTHOR = ?", (title, author))
+        res = cur.fetchone()
+        cur.execute("SELECT rowid FROM requested_books WHERE TITLE = ? AND AUTHOR = ?", (title, author))
+        res = cur.fetchone()
+        resfi = res[0]
+        cur.execute(f"DELETE FROM requested_books WHERE rowid = {resfi}")
+        con.commit()
+        return redirect("/action?action=17")
+        return True
+    if action == "20":
+        command = request.args.get("command", "SELECT * FROM books")
+        args = request.args.get("args", "")
+        cur.execute(f"{command}")
+        con.commit()
+        res = cur.fetchall()
+        return render_template("error.html", error=res)
     else:
         return render_template("error.html")
 @app.route("/search")
 def search():
     search_term = request.args.get("search", False)
-    if search_term == False:
+    if not search_term:
         return render_template("error.html")
     search = "%" + search_term + "%"
     cur.execute("SELECT * FROM books WHERE TITLE LIKE ?", (search, ))
