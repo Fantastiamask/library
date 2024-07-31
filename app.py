@@ -76,8 +76,8 @@ def checkout_book(book_id):
         return "Not available"
     cur.execute("SELECT rowid FROM users WHERE USERNAME = ?", (username,))
     rowid = cur.fetchone()[0]
-    #  + datetime.timedelta(days=5)
-    due_date = (datetime.datetime.now()).strftime('%Y-%m-%d')
+
+    due_date = (datetime.datetime.now() + datetime.timedelta(days=5)).strftime('%Y-%m-%d')
     cur.execute("UPDATE books SET STATUS = 'Checked out', BORROWER = ?, DUE_DATE = ? WHERE rowid = ?", (username, due_date, book_id))
     cur.execute("INSERT INTO checked_out(UserID, BookID) VALUES (?, ?)", (rowid, book_id))
     con.commit()
