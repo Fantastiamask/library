@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<div class="due-books">
+    <h2>Books Due Today</h2>
+    {% if due_today %}
+        <ul>
+            {% for book in due_today %}
+                <li class="due-today">{{ book[0] }} (Due: {{ book[1] }})</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No books are due today.</p>
+    {% endif %}
+</div> <br>
+
+<div class="due-books">
+    <h2>Books Due Soon</h2>
+    {% if due_soon %}
+        <ul>
+            {% for book in due_soon %}
+                <li class="due-soon">{{ book[0] }} (Due: {{ book[1] }})</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No books are due soon.</p>
+    {% endif %}
+</div> <br>
+
+<div class="due-books">
+    <h2>Overdue Books</h2>
+    {% if overdue %}
+        <ul>
+            {% for book in overdue %}
+                <li class="overdue">{{ book[0] }} (Due: {{ book[1] }})</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No overdue books.</p>
+    {% endif %}
+</div><br
+{% endblock %}

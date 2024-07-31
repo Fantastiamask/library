@@ -1,3 +1,4 @@
+import datetime 
 ## FLASK DEFAULTS ##
 from flask import Flask, render_template, request, redirect, session
 from flask_session import Session
@@ -30,7 +31,7 @@ def find_book(title, author):
     result = res[0]
     if result == 0:
         return "No Book"
-    cur.execute("SELECT rowid, STATUS, BORROWER, EBOOK, EBOOK_LINK, SERIES, NUM_IN_SERIES FROM books WHERE TITLE=? AND AUTHOR=?", (title, author))
+    cur.execute("SELECT rowid, STATUS, BORROWER, EBOOK, EBOOK_LINK, SERIES, NUM_IN_SERIES, DUE_DATE FROM books WHERE TITLE=? AND AUTHOR=?", (title, author))
     res = cur.fetchone()
     rowid = res[0]
     status = res[1]
@@ -39,7 +40,8 @@ def find_book(title, author):
     ebook_link = res[4]
     series = res[5]
     series_num = res[6]
-    return [rowid, status, borrower, ebook, ebook_link, series, series_num]
+    due_date = res[7]
+    return [rowid, status, borrower, ebook, ebook_link, series, series_num, due_date]
 def add_book(title, author, ebook, ebook_link, status, series, series_num): 
     cur.execute("SELECT COUNT(*) FROM books WHERE TITLE = ? AND AUTHOR = ?", (title, author))
     res = cur.fetchone()
@@ -62,23 +64,21 @@ def delete_book(title, author):
     return True
 def checkout_book(book_id):
     username = session.get("username", False)
-    if book_id == None:
+    if not book_id:
         return
-    cur.execute("SELECT COUNT(*) FROM books WHERE rowid = ?", book_id)
+    cur.execute("SELECT COUNT(*) FROM books WHERE rowid = ?", (book_id,))
     res = cur.fetchone()
     if res[0] == 0:
         return False
-    cur.execute("SELECT STATUS, EBOOK, EBOOK_LINK, rowid FROM books WHERE rowid = ?", book_id)
-    res = cur.fetchone()
-    status = res[0]
-    ebook = res[1]
-    ebook_link = res[2]
+    cur.execute("SELECT STATUS FROM books WHERE rowid = ?", (book_id,))
+    status = cur.fetchone()[0]
     if status != "available":
-            return "Not available"
-    cur.execute("SELECT rowid FROM users WHERE USERNAME = ?", (username, ))
-    res = cur.fetchone()
-    rowid = res[0]
-    cur.execute("UPDATE books SET STATUS = 'Checked out', BORROWER = ? WHERE rowid = ?", (username, book_id))
+        return "Not available"
+    cur.execute("SELECT rowid FROM users WHERE USERNAME = ?", (username,))
+    rowid = cur.fetchone()[0]
+    #  + datetime.timedelta(days=5)
+    due_date = (datetime.datetime.now()).strftime('%Y-%m-%d')
+    cur.execute("UPDATE books SET STATUS = 'Checked out', BORROWER = ?, DUE_DATE = ? WHERE rowid = ?", (username, due_date, book_id))
     cur.execute("INSERT INTO checked_out(UserID, BookID) VALUES (?, ?)", (rowid, book_id))
     con.commit()
     return True
@@ -88,21 +88,15 @@ def return_book(title, author):
     res = cur.fetchone()
     if res[0] == 0:
         return False
-    cur.execute("SELECT STATUS, EBOOK, EBOOK_LINK, rowid FROM books WHERE TITLE = ? AND AUTHOR = ?", (title, author))
-    res = cur.fetchone()
-    status = res[0]
-    ebook = res[1]
-    ebook_link = res[2]
-    book_id = res[3]
+    cur.execute("SELECT STATUS, rowid FROM books WHERE TITLE = ? AND AUTHOR = ?", (title, author))
+    status, book_id = cur.fetchone()
     if status == "available":
-            return "book available"
-    cur.execute("SELECT rowid FROM users WHERE USERNAME = ?", (username, ))
-    res = cur.fetchone()
-    rowid = res[0]
-    cur.execute("UPDATE books SET STATUS = 'available', BORROWER = ? WHERE rowid = ?", ("None", book_id))
-    cur.execute("DELETE FROM checked_out WHERE UserId = ?", (rowid, ))
+        return "Book already available"
+    cur.execute("UPDATE books SET STATUS = 'available', BORROWER = ?, DUE_DATE = NULL WHERE rowid = ?", ("None", book_id))
+    cur.execute("DELETE FROM checked_out WHERE UserID = ?", (username,))
     con.commit()
     return True
+
 def request_book(title, author):
     cur.execute("SELECT COUNT(*) FROM requested_books WHERE TITLE = ? AND AUTHOR = ?", (title, author))
     res = cur.fetchone()
@@ -142,7 +136,7 @@ def index():
         return render_template("home.html", name=username, pin=pin, message=message)
 
         return    
-    return render_template("login.html", error=error1)
+    return render_template("login.html", error=error1, name="guest")
 
 @app.route("/login", methods=['POST'])
 def login():
@@ -243,7 +237,8 @@ def action():
         ebook_link = results[4]
         series = results[5]
         series_num = results[6]
-        return render_template("book_info.html", book_id=book_id, title=title, author=author, status=status, borrower=borrower, ebook=ebook, ebook_link=ebook_link, username=username, series=series, series_num=series_num)
+        due_date = results[7]
+        return render_template("book_info.html", book_id=book_id, title=title, author=author, status=status, borrower=borrower, ebook=ebook, ebook_link=ebook_link, username=username, series=series, series_num=series_num, due_date=due_date)
     if action == "13":
         username = session.get("username", False)
         if not username:
@@ -303,3 +298,30 @@ def search():
     cur.execute("SELECT * FROM books WHERE TITLE LIKE ?", (search, ))
     books = cur.fetchall()
     return render_template("search.html", search_term=search_term, books=books)
+@app.route("/due")
+def due():
+    error = request.args.get("error")
+    message = request.args.get("message")
+    if error:
+        error1 = error
+    else:
+        error1 = ""
+    if session.get("username", False):
+        username = session.get("username")
+        pin = session.get("pin")
+        
+        today = datetime.datetime.now().date()
+        soon_due = today + datetime.timedelta(days=2)
+
+        cur.execute("SELECT title, due_date FROM books WHERE due_date = ? AND BORROWER=?", (today,username))
+        due_today = cur.fetchall()
+
+        cur.execute("SELECT title, due_date FROM books WHERE BORROWER=? AND due_date BETWEEN ? AND ?", (username, today, soon_due))
+        due_soon = cur.fetchall()
+
+        cur.execute("SELECT title, due_date FROM books WHERE due_date < ? AND BORROWER=?", (today, username))
+        overdue = cur.fetchall()
+
+        return render_template("due_books.html", name=username, due_today=due_today, due_soon=due_soon, overdue=overdue)
+
+    return render_template("login.html", error=error1)

@@ -8,6 +8,7 @@
         {{series}} {{series_num}}
     {% endif %}
     <p>Status: {{status}}</p>
+Due Date: {{ due_date if due_date else "Not Checked Out" }}<br>
     {% if status == 'available'%}
         <form action="/action">
             <input type="hidden" name="action" value="3">
